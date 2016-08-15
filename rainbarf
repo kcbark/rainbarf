@@ -458,7 +458,7 @@ sub battery {
             if ($? == 0) {
                 @battery = battery_freebsd();
             }
-     }
+    }
 
     battery_print(@battery);
     return;
