@@ -242,6 +242,9 @@ sub top {
         if ($^O eq q(darwin)) {
             @top = qx{/usr/bin/top -R -F -l1 -n0 -s0 -S};
         } elsif ($^O eq q(freebsd)) {
+            if (defined($ENV{'TOP'})) {
+                delete($ENV{'TOP'});
+            }
             @top = qx{/usr/bin/top -b -d2 -I -s1 -z};
         }
         for (@top) {
@@ -347,6 +350,18 @@ sub memory {
     return %m;
 }
 
+sub battery_freebsd {
+    my $time = qx(/sbin/sysctl -n hw.acpi.battery.time);
+    if ($time < 0) {
+        undef($time);
+    }
+    my $charging = qx(/sbin/sysctl -n hw.acpi.battery.state);
+    my $battery = qx(/sbin/sysctl -n hw.acpi.battery.life) / 100;
+
+    return ($battery, $charging, $time);
+
+}
+
 sub battery_osx {
     my %battery = map {
         /"(TimeRemaining|(?:Max|Current)Capacity|FullyCharged|ExternalConnected)"\s*=\s*(\d+|Yes|No)/ix
@@ -438,7 +453,12 @@ sub battery {
         @battery = battery_acpi();
     } elsif (-d q(/sys/class/power_supply)) {
         @battery = battery_sys();
-    }
+    } elsif ($^O eq q(freebsd)) {
+            my $checkbattery = `/sbin/sysctl hw.acpi.battery 2>&1 >/dev/null`;
+            if ($? == 0) {
+                @battery = battery_freebsd();
+            }
+     }
 
     battery_print(@battery);
     return;
