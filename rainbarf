@@ -458,7 +458,11 @@ sub battery {
             if ($? == 0) {
                 @battery = battery_freebsd();
             }
+<<<<<<< HEAD
     }
+=======
+     }
+>>>>>>> 320cdc10c908dc16dbf66735f990d271076aab47
 
     battery_print(@battery);
     return;
